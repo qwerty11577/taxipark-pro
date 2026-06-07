@@ -6,6 +6,7 @@ export default defineConfig({
   preview: {
     port: 4173,
     host: '0.0.0.0',
+    allowedHosts: ['taxipark-pro-production.up.railway.app', 'all'],
   },
   server: {
     port: 3000,
