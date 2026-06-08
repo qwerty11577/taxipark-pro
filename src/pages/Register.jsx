@@ -1,29 +1,45 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { registerUser, loginUser } from "../api";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Register() {
     const navigate = useNavigate();
     const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", confirm: "" });
     const [loading, setLoading] = useState(false);
 
-    const handleRegister = () => {
+    const handleRegister = async () => {
         if (!form.name || !form.email || !form.password) {
-            alert("Заполните все поля!");
+            toast.error("Заполните все поля!");
             return;
         }
         if (form.password !== form.confirm) {
-            alert("Пароли не совпадают!");
+            toast.error("Пароли не совпадают!");
             return;
         }
         setLoading(true);
-        setTimeout(() => {
+        try {
+            await registerUser({
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                password: form.password,
+            });
+            const data = await loginUser({ email: form.email, password: form.password });
+            localStorage.setItem("token", data.access_token);
+            toast.success("✅ Аккаунт создан!");
+            setTimeout(() => navigate("/dashboard"), 1000);
+        } catch (err) {
+            toast.error(err.detail || "Ошибка регистрации");
+        } finally {
             setLoading(false);
-            navigate("/dashboard");
-        }, 1500);
+        }
     };
 
     return (
         <div style={{ fontFamily: "'Space Grotesk', sans-serif", background: "#050508", color: "#fff", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <ToastContainer theme="dark" />
 
             <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
                 <div className="orb-1" style={{ position: "absolute", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,197,24,0.08) 0%, transparent 70%)", top: "-100px", left: "-100px" }} />
@@ -32,14 +48,12 @@ export default function Register() {
 
             <div className="fade-up" style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "480px", padding: "0 24px" }}>
 
-                {/* Logo */}
                 <div style={{ textAlign: "center", marginBottom: "40px" }}>
                     <div style={{ width: "56px", height: "56px", background: "linear-gradient(135deg, #f5c518, #ff8c00)", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", margin: "0 auto 16px" }}>🚗</div>
                     <h1 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.5px" }}>TaxiPark <span style={{ color: "#f5c518" }}>Pro</span></h1>
                     <p style={{ color: "#444", marginTop: "8px", fontSize: "15px" }}>Создайте аккаунт бесплатно</p>
                 </div>
 
-                {/* Card */}
                 <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px", padding: "40px" }}>
 
                     {[
@@ -56,7 +70,7 @@ export default function Register() {
                                 placeholder={f.placeholder}
                                 value={form[f.key]}
                                 onChange={e => setForm({ ...form, [f.key]: e.target.value })}
-                                style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", padding: "14px 16px", color: "#fff", fontSize: "15px", outline: "none", fontFamily: "'Space Grotesk', sans-serif", boxSizing: "border-box", transition: "border 0.2s" }}
+                                style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", padding: "14px 16px", color: "#fff", fontSize: "15px", outline: "none", fontFamily: "'Space Grotesk', sans-serif", boxSizing: "border-box" }}
                                 onFocus={e => e.target.style.border = "1px solid rgba(245,197,24,0.5)"}
                                 onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.1)"}
                             />
@@ -66,7 +80,8 @@ export default function Register() {
                     <button
                         className="glow-btn btn-hover"
                         onClick={handleRegister}
-                        style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #f5c518, #ff8c00)", color: "#000", border: "none", borderRadius: "50px", cursor: "pointer", fontWeight: 700, fontSize: "16px", fontFamily: "'Space Grotesk', sans-serif", marginTop: "8px" }}>
+                        disabled={loading}
+                        style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #f5c518, #ff8c00)", color: "#000", border: "none", borderRadius: "50px", cursor: "pointer", fontWeight: 700, fontSize: "16px", fontFamily: "'Space Grotesk', sans-serif", marginTop: "8px", opacity: loading ? 0.7 : 1 }}>
                         {loading ? "Создаём аккаунт..." : "Зарегистрироваться →"}
                     </button>
 
