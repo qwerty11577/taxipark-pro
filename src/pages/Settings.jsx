@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { getMe } from "../api";
 
 const SIDEBAR = [
     { icon: "📊", label: "Dashboard", path: "/dashboard" },
@@ -15,14 +16,24 @@ const SIDEBAR = [
 export default function Settings() {
     const navigate = useNavigate();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [profile, setProfile] = useState({ name: "Бобур Марипов", email: "bobur@taxipark.ru", phone: "+7 999 123 45 67", company: "TaxiPark Pro" });
+    const [profile, setProfile] = useState({ name: "", email: "", phone: "", company: "" });
+    const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState({ newOrder: true, driverOnline: true, payment: true, report: false });
-    const [saved, setSaved] = useState(false);
+
+    useEffect(() => {
+        getMe().then(user => {
+            setProfile({
+                name: user.name || "",
+                email: user.email || "",
+                phone: user.phone || "",
+                company: user.company || "TaxiPark Pro",
+            });
+            setLoading(false);
+        }).catch(() => navigate("/login"));
+    }, []);
 
     const saveProfile = () => {
         toast.success("✅ Профиль сохранён!");
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
     };
 
     return (
@@ -50,7 +61,7 @@ export default function Settings() {
                     </button>
                 ))}
                 <div style={{ marginTop: "auto" }}>
-                    <button onClick={() => navigate("/")} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", borderRadius: "12px", border: "none", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif", fontSize: "15px", background: "transparent", color: "#555", width: "100%", whiteSpace: "nowrap" }}>
+                    <button onClick={() => { localStorage.removeItem("token"); navigate("/"); }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", borderRadius: "12px", border: "none", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif", fontSize: "15px", background: "transparent", color: "#555", width: "100%", whiteSpace: "nowrap" }}>
                         <span style={{ flexShrink: 0 }}>🚪</span>
                         {!sidebarCollapsed && "Выйти"}
                     </button>
@@ -70,15 +81,13 @@ export default function Settings() {
                     <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "20px", padding: "28px" }}>
                         <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "24px" }}>👤 Профиль</h3>
 
-                        {/* Avatar */}
                         <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
-                            <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "linear-gradient(135deg, #f5c518, #ff8c00)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", fontWeight: 700, color: "#000" }}>B</div>
+                            <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "linear-gradient(135deg, #f5c518, #ff8c00)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", fontWeight: 700, color: "#000" }}>
+                                {profile.name?.[0] || "U"}
+                            </div>
                             <div>
-                                <div style={{ fontSize: "16px", fontWeight: 700 }}>{profile.name}</div>
+                                <div style={{ fontSize: "16px", fontWeight: 700 }}>{loading ? "Загрузка..." : profile.name}</div>
                                 <div style={{ fontSize: "13px", color: "#444", marginTop: "4px" }}>Администратор</div>
-                                <button style={{ marginTop: "8px", background: "rgba(245,197,24,0.1)", color: "#f5c518", border: "1px solid rgba(245,197,24,0.2)", padding: "4px 12px", borderRadius: "50px", cursor: "pointer", fontSize: "12px", fontFamily: "'Space Grotesk', sans-serif" }}>
-                                    Изменить фото
-                                </button>
                             </div>
                         </div>
 
@@ -101,7 +110,7 @@ export default function Settings() {
                         ))}
 
                         <button onClick={saveProfile} style={{ width: "100%", padding: "14px", background: "linear-gradient(135deg, #f5c518, #ff8c00)", color: "#000", border: "none", borderRadius: "50px", cursor: "pointer", fontWeight: 700, fontSize: "15px", fontFamily: "'Space Grotesk', sans-serif", marginTop: "8px" }}>
-                            {saved ? "✅ Сохранено!" : "Сохранить →"}
+                            Сохранить →
                         </button>
                     </div>
 
